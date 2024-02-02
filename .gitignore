@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+.DS_Store
+
+/data
+/data*
+/SS
+/reprex
+
+Bokspits_*
+Struizendam_*
