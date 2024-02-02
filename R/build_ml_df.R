@@ -12,7 +12,7 @@
 #' whereas "point returns the mean of overlapping cells (much smaller df).
 #' @param ... passed to `terra_read_rows` a custom function - could be for example
 #' .prop = 0.1 if the function is too RAM intensive.
-build_ml_df_old <- function(cube,
+build_ml_df <- function(cube,
                         site_name, 
                         data_dir="data_in", 
                         lookup_file = file.path(data_dir, "Veg_type_lookup_list.xlsx"),
@@ -29,18 +29,17 @@ build_ml_df_old <- function(cube,
   
   # load field survey points.
   fdp <- read_sf(file.path(base_dir, 
-                           paste0(site_name, "_Field_data_points_All_b30.shp")))
+                           paste0(site_name, "_train.shp")))
   
   # clean up the training data get what we need.
-  look_up <- read_xlsx(lookup_file, 
-                       col_names=c("Type", "Class", "Description")) |> 
-    select(!Description)
+  look_up <- read_xlsx(lookup_file, col_names=c("Type", "Description")) #|>   dplyr::select(!Description)
   
   
-  veg_types <- look_up|>
-    right_join(fdp, by = "Type", multiple = "all") |>
-    select(!c(Photo, Notes, layer, path)) |>
-    st_as_sf()
+  #veg_types <- look_up|>
+  #  right_join(fdp, by = "Type", multiple = "all") |>
+  #  dplyr::select(!c(Photo, Notes, layer, path)) |>
+  #  st_as_sf()
+   veg_types <- fdp
   
   if (df_type=="point"){
     out_df <- file.path(out_dir, paste0(site_name, "ML_in_Point_level.rds"))
@@ -52,11 +51,12 @@ build_ml_df_old <- function(cube,
       st_centroid()
     .xy <- st_coordinates(pnt_df)
     pnt_df <- pnt_df |>
+      dplyr::arrange(Type) |>
       mutate(x=.xy[,1],
              y=.xy[,2],
-             Class=as.factor(Class)) |>
+             Type=factor(Type, levels=unique(Type))) |>
       st_drop_geometry() |>
-      select(!c("fid", "Date"))|>
+      dplyr::select(!c("fid", "Date"))|>
       rename_at(vars(starts_with('mean')), ~(gsub("mean.","",.x)))
     
     attr(pnt_df, 'CRS') <- crs(cube)
@@ -75,9 +75,11 @@ build_ml_df_old <- function(cube,
     comb_bands <- c(tv, cube)
     
     grid_df <- terra_read_rows(comb_bands,
-                    ...) |>
+                               ...) |>
       left_join(look_up, by = "Type") |> 
-      mutate(Type=as.factor(Type))
+      dplyr::arrange(Type) |> 
+      mutate(Type=factor(Type, levels=unique(Type)))
+    unique(grid_df$Type)
     
     attr(grid_df, 'CRS') <- crs(cube)
     # attributes(grid_df)
@@ -86,5 +88,5 @@ build_ml_df_old <- function(cube,
   }
   
   return(out_df)
-
+  
 }

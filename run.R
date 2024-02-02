@@ -4,27 +4,28 @@ invisible(lapply(list.files("R", full.names = TRUE, recursive = TRUE), source))
 library(stringr)
 library(openxlsx)
 
-site_name = "Struizendam_2"
+site_name = "Dinaka"
+df_type = "grid"
+folds = 20
+n_evals = 40
+tune_method = "random_search" # or mbo etc
 
 #============ Data Prep =====================
 
-x <- build_cube(site_name = "Struizendam_2")
 
-# x <- rast("data_out/Struizendam_2/Struizendam_2_stack.tif") #access the intermediate layer
+x <- rast(paste0("data_in/",site_name,"/",site_name,"_stack.tif")) #import stacked image
 
-v <- build_ml_df(cube = x,
-                 site_name = "Struizendam_2",
-                 df_type="grid")
+v <- build_ml_df(cube = x, site_name = site_name, df_type=df_type)
 
-v <- "data_out/Struizendam_2/Struizendam_2ML_in_grid_level.rds"
+v <- paste0("data_out/",site_name,"/",site_name,"ML_in_grid_level.rds")
 
 
 #================ ML pipeline ================
 # Auto ML ------------------
 
-task <- build_task(v, site_name="Struizendam_2")
+task <- build_task(v, site_name=site_name)
 
-tune_spcv <- mlr3::rsmp("spcv_coords", folds = 20)
+tune_spcv <- mlr3::rsmp("spcv_coords", folds = folds)
 
 # #inspect the spatial cv
 autoplot(tune_spcv, task=task, 1:3)
@@ -43,7 +44,7 @@ xgb_tune <- tune_lrnr(
   .lrnr = xgb.lrn.filt,
   .resamp = tune_spcv,
   .measure = msr("classif.acc"),
-  .n_evals = 40,
+  .n_evals = n_evals,
 #  sub.sample = 0.1,
   .tune_method = "random_search",
 #.tune_method = "random_search",
@@ -72,7 +73,7 @@ svm_tune <- tune_lrnr(
   .resamp = tune_spcv,
   .measure = msr("classif.acc"),
 #  sub.sample = 0.1,
-  .n_evals = 40,
+  .n_evals = n_evals,
   .tune_method = "random_search",
 #.tune_method = "random_search",
   .test.scale = TRUE,
@@ -98,7 +99,7 @@ rf_tune <- tune_lrnr(
   .resamp = tune_spcv,
   .measure = msr("classif.acc"),
 #  sub.sample = 0.1,
-  .n_evals = 40,
+  .n_evals = n_evals,
   .tune_method = "random_search",
   .test.scale = TRUE,
   .test.pca = TRUE
@@ -130,7 +131,7 @@ ens_tune <- tune_lrnr(
   .resamp = tune_spcv,
   .measure = msr("classif.acc"),
 #  sub.sample = 0.1,
-  .n_evals = 20,
+  .n_evals = n_evals,
  # .tune_method = "random_search", 
 .tune_method = "random_search", # definitely use "mbo" for this!
   .test.scale = TRUE,
@@ -195,7 +196,7 @@ p3
 tic()
 mod.pred <- predict_terra_tile(x,
                                mod= svm_tune$tun_inst$learner,
-                               site_name="Struizendam_2",
+                               site_name="Dinaka",
                                .workers=1, tile=TRUE, tile_dims = 5)
 toc()
 # quick n dirt map.
