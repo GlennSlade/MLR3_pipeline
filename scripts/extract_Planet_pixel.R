@@ -1,0 +1,377 @@
+### Script to Extract Data from Drone Classifications based on planet pixel grid
+### matching pixels
+### Imports classified drone image data set and calculates fractional cover for each 
+### class in each planet pixel and then samples that data to produce training data set
+### for classification of planet image.
+
+library(terra)
+library(lubridate)
+library(RColorBrewer)
+library(ggplot2)
+library(MASS)
+library(splines)
+library(rgeos)
+library(tidyverse)
+library(viridis)
+library(gridExtra)
+library(DescTools)
+library(sf)
+library(exactextractr)
+library(writexl) 
+#library (raster)
+library(dplyr)
+
+#-------0. SET Parameters to use for training data set
+
+#Fraction  cover to use to define training class 1.0 = 100%
+#Change this to vary the pixel definitions
+A = "0.85"
+
+#Fraction  cover to use to define training class for Prosopis 1.0 = 100%
+#Change this to vary the pixel definitions
+P = "0.85"
+
+#Number of pixels from each Class to use in training data
+
+N = "400"
+
+
+#----1. Read in files for Bokspits_1 etc Classified image data ----
+
+
+Bokspits_1_Predict <- rast("data_out/Bokspits_1/Bokspits_1_Predict_Map.tif")
+Bokspits_1_Predict
+
+## NB You cant use exact extract with SpatVector so importing it a a spatial DF
+
+Bokspits_1_Planet_grid_SF <- read_sf(dsn = 'data_in/Planet_Grids', layer = "Bokspits_1_Planet_grid")
+Bokspits_1_Planet_grid_SF
+
+
+
+#---2. Extract data for Bokspits_1 Grid
+
+
+Bokspits_1_Planet_Extract <- exact_extract(Bokspits_1_Predict,Bokspits_1_Planet_grid_SF,"mode")
+names(Bokspits_1_Planet_Extract) <- c('mode')
+Bokspits_1_Planet_Extract_DF <-bind_cols(Bokspits_1_Planet_grid_SF,Bokspits_1_Planet_Extract)
+
+Bokspits_1_Planet_Extract <- exact_extract(Bokspits_1_Predict,Bokspits_1_Planet_grid_SF,"majority" )
+names(Bokspits_1_Planet_Extract) <- c('Type')
+Bokspits_1_Planet_Extract_DF <- dplyr::mutate(Bokspits_1_Planet_Extract_DF, Type = Bokspits_1_Planet_Extract)
+
+Bokspits_1_Planet_Extract <- exact_extract(Bokspits_1_Predict,Bokspits_1_Planet_grid_SF,"frac" )# calculates fraction cover for each classification value
+#a column is added with the FVC for each vegetation type frac1, frac2 etc...
+Bokspits_1_Planet_Extract_DF <- dplyr::mutate(Bokspits_1_Planet_Extract_DF, Bokspits_1_Planet_Extract)
+
+#----3. Read in files for Bokspits_2 etc Classified image data ----
+
+
+Bokspits_2_Predict <- rast("data_out/Bokspits_2/Bokspits_2_Predict_Map.tif")
+
+## NB You cant use exact extract with SpatVector so re-importing it a a spatial DF
+Bokspits_2_Planet_grid_SF <- read_sf(dsn = 'data_in/Planet_Grids', layer = "Bokspits_2_Planet_grid")
+
+
+#---4.. Extract data for Bokspits_2 Grid
+
+
+Bokspits_2_Planet_Extract <- exact_extract(Bokspits_2_Predict,Bokspits_2_Planet_grid_SF,"mode")
+names(Bokspits_2_Planet_Extract) <- c('mode')
+Bokspits_2_Planet_Extract_DF <-bind_cols(Bokspits_2_Planet_grid_SF,Bokspits_2_Planet_Extract)
+
+Bokspits_2_Planet_Extract <- exact_extract(Bokspits_2_Predict,Bokspits_2_Planet_grid_SF,"majority" )
+names(Bokspits_2_Planet_Extract) <- c('Type')
+Bokspits_2_Planet_Extract_DF <- dplyr::mutate(Bokspits_2_Planet_Extract_DF, Type = Bokspits_2_Planet_Extract)
+
+Bokspits_2_Planet_Extract <- exact_extract(Bokspits_2_Predict,Bokspits_2_Planet_grid_SF,"frac" )# calculates fraction cover for each classification value
+#a column is added with the FVC for each vegetation type frac1, frac2 etc...
+Bokspits_2_Planet_Extract_DF <- dplyr::mutate(Bokspits_2_Planet_Extract_DF, Bokspits_2_Planet_Extract)
+
+#----5. Read in files for Bokspits_3 etc Classified image data ----
+
+
+Bokspits_3_Predict <- rast("data_out/Bokspits_3/Bokspits_3_Predict_Map.tif")
+
+## NB You cant use exact extract with SpatVector so re-importing it a a spatial DF
+Bokspits_3_Planet_grid_SF <- read_sf(dsn = 'data_in/Planet_Grids', layer = "Bokspits_3_Planet_grid")
+
+
+#---6. Extract data for Bokspits_3 Grid
+
+
+Bokspits_3_Planet_Extract <- exact_extract(Bokspits_3_Predict,Bokspits_3_Planet_grid_SF,"mode")
+names(Bokspits_3_Planet_Extract) <- c('mode')
+Bokspits_3_Planet_Extract_DF <-bind_cols(Bokspits_3_Planet_grid_SF,Bokspits_3_Planet_Extract)
+
+Bokspits_3_Planet_Extract <- exact_extract(Bokspits_3_Predict,Bokspits_3_Planet_grid_SF,"majority" )
+names(Bokspits_3_Planet_Extract) <- c('Type')
+Bokspits_3_Planet_Extract_DF <- dplyr::mutate(Bokspits_3_Planet_Extract_DF, Type = Bokspits_3_Planet_Extract)
+
+Bokspits_3_Planet_Extract <- exact_extract(Bokspits_3_Predict,Bokspits_3_Planet_grid_SF,"frac" )# calculates fraction cover for each classification value
+#a column is added with the FVC for each vegetation type frac1, frac2 etc...
+Bokspits_3_Planet_Extract_DF <- dplyr::mutate(Bokspits_3_Planet_Extract_DF, Bokspits_3_Planet_Extract)
+
+
+#----7. Read in files for Struizendam_1 etc Classified image data ----
+
+
+Struizendam_1_Predict <- rast("data_out/Struizendam_1/Struizendam_1_Predict_Map.tif")
+
+## NB You cant use exact extract with SpatVector so re-importing it a a spatial DF
+Struizendam_1_Planet_grid_SF <- read_sf(dsn = 'data_in/Planet_Grids', layer = "Struizendam_1_Planet_grid")
+
+
+#---8. Extract data for Struizendam_1 Grid
+
+
+Struizendam_1_Planet_Extract <- exact_extract(Struizendam_1_Predict,Struizendam_1_Planet_grid_SF,"mode")
+names(Struizendam_1_Planet_Extract) <- c('mode')
+Struizendam_1_Planet_Extract_DF <-bind_cols(Struizendam_1_Planet_grid_SF,Struizendam_1_Planet_Extract)
+
+Struizendam_1_Planet_Extract <- exact_extract(Struizendam_1_Predict,Struizendam_1_Planet_grid_SF,"majority" )
+names(Struizendam_1_Planet_Extract) <- c('Type')
+Struizendam_1_Planet_Extract_DF <- dplyr::mutate(Struizendam_1_Planet_Extract_DF, Type = Struizendam_1_Planet_Extract)
+
+Struizendam_1_Planet_Extract <- exact_extract(Struizendam_1_Predict,Struizendam_1_Planet_grid_SF,"frac" )# calculates fraction cover for each classification value
+#a column is added with the FVC for each vegetation type frac1, frac2 etc...
+Struizendam_1_Planet_Extract_DF <- dplyr::mutate(Struizendam_1_Planet_Extract_DF, Struizendam_1_Planet_Extract)
+
+
+#----9. Read in files for Struizendam_2 etc Classified image data ----
+
+
+Struizendam_2_Predict <- rast("data_out/Struizendam_2/Struizendam_2_Predict_Map.tif")
+
+## NB You cant use exact extract with SpatVector so re-importing it a a spatial DF
+Struizendam_2_Planet_grid_SF <- read_sf(dsn = 'data_in/Planet_Grids', layer = "Struizendam_2_Planet_grid")
+
+
+#---10. Extract data for Struizendam_2 Grid
+
+
+Struizendam_2_Planet_Extract <- exact_extract(Struizendam_2_Predict,Struizendam_2_Planet_grid_SF,"mode")
+names(Struizendam_2_Planet_Extract) <- c('mode')
+Struizendam_2_Planet_Extract_DF <-bind_cols(Struizendam_2_Planet_grid_SF,Struizendam_2_Planet_Extract)
+
+Struizendam_2_Planet_Extract <- exact_extract(Struizendam_2_Predict,Struizendam_2_Planet_grid_SF,"majority" )
+names(Struizendam_2_Planet_Extract) <- c('Type')
+Struizendam_2_Planet_Extract_DF <- dplyr::mutate(Struizendam_2_Planet_Extract_DF, Type = Struizendam_2_Planet_Extract)
+
+Struizendam_2_Planet_Extract <- exact_extract(Struizendam_2_Predict,Struizendam_2_Planet_grid_SF,"frac" )# calculates fraction cover for each classification value
+#a column is added with the FVC for each vegetation type frac1, frac2 etc...
+Struizendam_2_Planet_Extract_DF <- dplyr::mutate(Struizendam_2_Planet_Extract_DF, Struizendam_2_Planet_Extract)
+
+#----11. Read in files for Struizendam_3 etc Classified image data ----
+
+
+Struizendam_3_Predict <- rast("data_out/Struizendam_3/Struizendam_3_Predict_Map.tif")
+
+## NB You cant use exact extract with SpatVector so re-importing it a a spatial DF
+Struizendam_3_Planet_grid_SF <- read_sf(dsn = 'data_in/Planet_Grids', layer = "Struizendam_3_Planet_grid")
+
+
+#---12. Extract data for Struizendam_3 Grid
+
+
+Struizendam_3_Planet_Extract <- exact_extract(Struizendam_3_Predict,Struizendam_3_Planet_grid_SF,"mode")
+names(Struizendam_3_Planet_Extract) <- c('mode')
+Struizendam_3_Planet_Extract_DF <-bind_cols(Struizendam_3_Planet_grid_SF,Struizendam_3_Planet_Extract)
+
+Struizendam_3_Planet_Extract <- exact_extract(Struizendam_3_Predict,Struizendam_3_Planet_grid_SF,"majority" )
+names(Struizendam_3_Planet_Extract) <- c('Type')
+Struizendam_3_Planet_Extract_DF <- dplyr::mutate(Struizendam_3_Planet_Extract_DF, Type = Struizendam_3_Planet_Extract)
+
+Struizendam_3_Planet_Extract <- exact_extract(Struizendam_3_Predict,Struizendam_3_Planet_grid_SF,"frac" )# calculates fraction cover for each classification value
+#a column is added with the FVC for each vegetation type frac1, frac2 etc...
+Struizendam_3_Planet_Extract_DF <- dplyr::mutate(Struizendam_3_Planet_Extract_DF, Struizendam_3_Planet_Extract)
+
+#----13. Read in files for Struizendam_4 etc Classified image data ----
+
+
+Struizendam_4_Predict <- rast("data_out/Struizendam_4/Struizendam_4_Predict_Map.tif")
+
+## NB You cant use exact extract with SpatVector so re-importing it a a spatial DF
+Struizendam_4_Planet_grid_SF <- read_sf(dsn = 'data_in/Planet_Grids', layer = "Struizendam_4_Planet_grid")
+
+
+#---14. Extract data for Struizendam_4 Grid
+
+
+Struizendam_4_Planet_Extract <- exact_extract(Struizendam_4_Predict,Struizendam_4_Planet_grid_SF,"mode")
+names(Struizendam_4_Planet_Extract) <- c('mode')
+Struizendam_4_Planet_Extract_DF <-bind_cols(Struizendam_4_Planet_grid_SF,Struizendam_4_Planet_Extract)
+
+Struizendam_4_Planet_Extract <- exact_extract(Struizendam_4_Predict,Struizendam_4_Planet_grid_SF,"majority" )
+names(Struizendam_4_Planet_Extract) <- c('Type')
+Struizendam_4_Planet_Extract_DF <- dplyr::mutate(Struizendam_4_Planet_Extract_DF, Type = Struizendam_4_Planet_Extract)
+
+Struizendam_4_Planet_Extract <- exact_extract(Struizendam_4_Predict,Struizendam_4_Planet_grid_SF,"frac" )# calculates fraction cover for each classification value
+#a column is added with the FVC for each vegetation type frac1, frac2 etc...
+Struizendam_4_Planet_Extract_DF <- dplyr::mutate(Struizendam_4_Planet_Extract_DF, Struizendam_4_Planet_Extract)
+
+#-----15. Combine data frames from each drone survey into one training data set for all survey areas
+
+Planet_full_Extract_DF <- bind_rows(Bokspits_1_Planet_Extract_DF, Bokspits_2_Planet_Extract_DF,Bokspits_3_Planet_Extract_DF, Struizendam_1_Planet_Extract_DF, Struizendam_2_Planet_Extract_DF,Struizendam_3_Planet_Extract_DF,Struizendam_4_Planet_Extract_DF)
+#need to replace NA with zeros
+
+Planet_full_Extract_DF[is.na(Planet_full_Extract_DF)] <- 0
+
+saveRDS(Planet_full_Extract_DF, "data_in/Planet_2022/Planet_pixel_extract_Full_DF.rds")
+st_write(Planet_full_Extract_DF, "data_in/Planet_2022/Planet_pixel_extract_Full_DF.shp", append=FALSE)
+
+#----16.  Select Parameters for defining training 
+
+
+Planet_full_Extract_DF <-readRDS("data_in/Planet_2022/Planet_pixel_extract_Full_DF.rds")
+
+
+#Need to define all frac_ in final version
+
+#Planet_full_Extract_DF_85<- Planet_full_Extract_DF %>% filter_at(vars(frac_1,frac_2,frac_3,frac_5,frac_6,frac_7,frac_10), any_vars(. > 0.85))
+#Planet_full_Extract_DF_P <- Planet_full_Planet_Extract_DF %>% filter_at(vars(frac_1), any_vars(. > paste0(P)))
+
+
+Planet_full_Extract_DF_85_1 <- Planet_full_Extract_DF %>% filter (frac_1 > 0.85)
+Planet_full_Extract_DF_85_2 <- Planet_full_Extract_DF %>% filter (frac_2 > 0.85)
+Planet_full_Extract_DF_85_3 <- Planet_full_Extract_DF  %>% filter (frac_3 > 0.85)
+Planet_full_Extract_DF_85_5 <- Planet_full_Extract_DF %>% filter (frac_5 > 0.85)
+Planet_full_Extract_DF_85_6 <- Planet_full_Extract_DF  %>% filter (frac_6 > 0.85)
+Planet_full_Extract_DF_85_7 <- Planet_full_Extract_DF  %>% filter (frac_7 > 0.85)
+Planet_full_Extract_DF_85_10 <- Planet_full_Extract_DF %>% filter (frac_10 > 0.85)
+
+Planet_full_train <- bind_rows(Planet_full_Extract_DF_85_1,Planet_full_Extract_DF_85_2,Planet_full_Extract_DF_85_3,Planet_full_Extract_DF_85_5,Planet_full_Extract_DF_85_6,Planet_full_Extract_DF_85_7)
+
+saveRDS(Planet_full_train, "data_in/Planet_2022/Planet_pixel_extract_full_train_85.rds")
+st_write(Planet_full_train, "data_in/Planet_2022/Planet_pixel_extract_full_train_85.shp", append=FALSE)
+
+
+# Sampling the full training set to have equal class size of N
+
+Planet_full_Extract_DF_85_1e <-Planet_full_Extract_DF_85_1 [ sample( which( Planet_full_Extract_DF_85_1$Type == "1" ) ,N ) , ]
+Planet_full_Extract_DF_85_2e <-Planet_full_Extract_DF_85_2[ sample( which( Planet_full_Extract_DF_85_2$Type == "2" ) ,N) , ]
+Planet_full_Extract_DF_85_3e <-Planet_full_Extract_DF_85_3[ sample( which( Planet_full_Extract_DF_85_3$Type == "3" ) ,N) , ]
+Planet_full_Extract_DF_85_5e <-Planet_full_Extract_DF_85_5[ sample( which( Planet_full_Extract_DF_85_5$Type == "5" ) , N) , ]
+Planet_full_Extract_DF_85_6e <-Planet_full_Extract_DF_85_6[ sample( which( Planet_full_Extract_DF_85_6$Type == "6" ) ,N ), ]
+Planet_full_Extract_DF_85_7e <-Planet_full_Extract_DF_85_7[ sample( which( Planet_full_Extract_DF_85_7$Type == "7" ) ,N) , ]
+
+Planet_full_traine <- bind_rows(Planet_full_Extract_DF_85_1e,Planet_full_Extract_DF_85_2e,Planet_full_Extract_DF_85_3e,Planet_full_Extract_DF_85_5e,Planet_full_Extract_DF_85_6e)#,Planet_full_Extract_DF_85_7e)
+
+Planet_full_traine <- dplyr::select(Planet_full_traine,- frac_4)
+
+Planet_full_traine <- dplyr::select(Planet_full_traine,- frac_8)
+Planet_full_traine <- dplyr::select(Planet_full_traine,- frac_10)
+#Planet_full_traine <- dplyr::select(Planet_full_traine,- frac_7)
+Planet_full_traine <- dplyr::select(Planet_full_traine,- ...6)
+Planet_full_traine <- dplyr::select(Planet_full_traine,- blue)
+Planet_full_traine <- dplyr::select(Planet_full_traine,- green)
+Planet_full_traine <- dplyr::select(Planet_full_traine,- red)
+Planet_full_traine <- dplyr::select(Planet_full_traine,- nir)
+
+
+saveRDS(Planet_full_traine, "data_in/Planet_2022/Planet_equal_class_size_400_train_85.rds")
+st_write(Planet_full_traine, "data_in/Planet_2022/Planet_equal_class_size_400_train_85.shp", append=FALSE)
+
+Planet_full_trainx=Planet_full_traine
+Planet_full_trainx <- dplyr::select(Planet_full_trainx,- frac_1)
+Planet_full_trainx <- dplyr::select(Planet_full_trainx,- frac_2)
+Planet_full_trainx <- dplyr::select(Planet_full_trainx,- frac_3)
+Planet_full_trainx <- dplyr::select(Planet_full_trainx,- frac_5)
+Planet_full_trainx <- dplyr::select(Planet_full_trainx,- frac_6)
+Planet_full_trainx <- dplyr::select(Planet_full_trainx,- frac_7)
+
+saveRDS(Planet_full_trainx, "data_in/Planet_2022/Planet_equal_class_size_400_train_85_clean.rds")
+st_write(Planet_full_trainx, "data_in/Planet_2022/Planet_equal_class_size_400_train_85_clean.shp", append=FALSE)
+
+
+
+# ----- 16b making simpler training classes - Prosopis, sand, grass, other woody vegetation
+
+DFX <-readRDS("data_in/Planet/Planet_equal_class_size_400_train_85_clean.rds")
+
+DFX <- DFX %>%                               # Replacing values
+  mutate(Type = replace(Type, Type == 5, 6))
+
+DFX <- DFX %>%                               # Replacing values
+  mutate(Type = replace(Type, Type == 7, 6))
+
+DFX_6 <-DFX[ sample( which( DFX$Type == "6" ) ,400 ), ]
+DFX_1 <-DFX[ sample( which( DFX$Type == "1" ) ,400 ), ]
+DFX_2 <-DFX[ sample( which( DFX$Type == "2" ) ,400 ), ]
+DFX_3 <-DFX[ sample( which( DFX$Type == "3" ) ,400 ), ]
+
+DFX_F <- bind_rows(DFX_1,DFX_2,DFX_3,DFX_6)
+
+saveRDS(DFX_F, "data_in/Planet/Planet_equal_class_size_400_train_85_simple.rds")
+st_write(DFX_F, "data_in/Planet/Planet_equal_class_size_400_train_85_simple.shp", append=FALSE)
+
+
+#------17. Making mixed pixel training classes to try ..... -------------
+
+#Making a High Density Bush (HD) class with >65% RT and the rest bare sand and grass
+
+Planet_full_Extract_DF_H1<- filter(Planet_full_Extract_DF,frac_6 <0.94)
+Planet_full_Extract_DF_H2<- filter(Planet_full_Extract_DF_H1,frac_6 >0.65)
+Planet_full_Extract_DF_H3<- filter(Planet_full_Extract_DF_H2,frac_1 <0.02)
+Planet_full_Extract_DF_H4<- filter(Planet_full_Extract_DF_H3,frac_5 <0.02)
+Planet_full_Extract_DF_H5<- filter(Planet_full_Extract_DF_H4,frac_7 <0.02)
+Planet_full_Extract_DF_H6<- filter(Planet_full_Extract_DF_H5,frac_4 <0.02)
+Planet_full_Extract_DF_H7<- filter(Planet_full_Extract_DF_H6,frac_13 <0.02)
+Planet_full_Extract_DF_HD<- filter(Planet_full_Extract_DF_H7,frac_10 <0.02)
+
+
+# Majority value changed to 21 for high density RT  class
+
+Planet_full_Extract_DF_HD <- Planet_full_Extract_DF_HD%>% mutate(majority = replace(majority,majority<=13,21))
+
+Planet_full_Extract_DF_HD <-Planet_full_Extract_DF_HD[ sample( which( Planet_full_Extract_DF_HD$majority == "21" ) , N), ]
+
+
+#Making a Medium  Density Bush (MD) class with >35% <65% RT and the rest bare sand and grass
+
+Planet_full_Extract_DF_M1<- filter(Planet_full_Extract_DF,frac_6 <0.64)
+Planet_full_Extract_DF_M2<- filter(Planet_full_Extract_DF_M1,frac_6 >0.35)
+Planet_full_Extract_DF_M3<- filter(Planet_full_Extract_DF_M2,frac_1 <0.02)
+Planet_full_Extract_DF_M4<- filter(Planet_full_Extract_DF_M3,frac_5 <0.02)
+Planet_full_Extract_DF_M5<- filter(Planet_full_Extract_DF_M4,frac_7 <0.02)
+Planet_full_Extract_DF_M6<- filter(Planet_full_Extract_DF_M5,frac_4 <0.02)
+Planet_full_Extract_DF_M7<- filter(Planet_full_Extract_DF_M6,frac_13 <0.02)
+Planet_full_Extract_DF_MD<- filter(Planet_full_Extract_DF_M7,frac_10 <0.02)
+
+# Majority value changed to 31 for high density RT  class
+
+Planet_full_Extract_DF_MD <- Planet_full_Extract_DF_MD%>% mutate(majority = replace(majority,majority<=13,31))
+
+Planet_full_Extract_DF_MD <-Planet_full_Extract_DF_MD[ sample( which( Planet_full_Extract_DF_MD$majority == "31" ) , N ), ]
+
+
+#Making a Low Density Bush (MD) class with >35% <65% RT and the rest bare sand and grass
+
+
+Planet_full_Extract_DF_L1<- filter(Planet_full_Extract_DF,frac_6 <0.34)
+Planet_full_Extract_DF_L2<- filter(Planet_full_Extract_DF_L1,frac_6 >0.05)
+Planet_full_Extract_DF_L3<- filter(Planet_full_Extract_DF_L2,frac_1 <0.02)
+Planet_full_Extract_DF_L4<- filter(Planet_full_Extract_DF_L3,frac_5 <0.02)
+Planet_full_Extract_DF_L5<- filter(Planet_full_Extract_DF_L4,frac_7 <0.02)
+Planet_full_Extract_DF_L6<- filter(Planet_full_Extract_DF_L5,frac_4 <0.02)
+Planet_full_Extract_DF_L7<- filter(Planet_full_Extract_DF_L6,frac_13 <0.02)
+Planet_full_Extract_DF_L8<- filter(Planet_full_Extract_DF_L7,frac_3 <0.94)
+Planet_full_Extract_DF_L9<- filter(Planet_full_Extract_DF_L8,frac_2 <0.94)
+Planet_full_Extract_DF_LD<- filter(Planet_full_Extract_DF_L9,frac_10 <0.02)
+
+
+# Majority value cLanged to 41 for Low density RT  class
+
+Planet_full_Extract_DF_LD <- Planet_full_Extract_DF_LD%>% mutate(majority = replace(majority,majority<=13,41))
+
+Planet_full_Extract_DF_LD <-Planet_full_Extract_DF_LD[ sample( which( Planet_full_Extract_DF_LD$majority == "41" ) , N ), ]
+
+#maje new training df with mixed classes added
+
+Planet_full_train_M<- bind_rows(Planet_full_traine,Planet_full_Extract_DF_LD,Planet_full_Extract_DF_MD,Planet_full_Extract_DF_HD)
+
+saveRDS(Planet_full_train_M, "data_in/Planet/Planet_equal_class_size_",paste0(N),"_train_and_mixed.rds")
+
+st_write(Planet_full_train_M, dsn = "data_in/Planet/Planet_equal_class_size_",paste0(N),"_train_and_mixed.shp")
+
+
