@@ -29,18 +29,17 @@ build_ml_df <- function(cube,
   
   # load field survey points.
   fdp <- read_sf(file.path(base_dir, 
-                           paste0(site_name, "_train.shp")))
+                           paste0(site_name, "_train_poly.shp")))
   
   # clean up the training data get what we need.
   look_up <- read_xlsx(lookup_file, col_names=c("Type", "Description")) #|>   dplyr::select(!Description)
+  look_up$Type <- as.numeric(as.character(look_up$Type))
   
-  
-  #veg_types <- look_up|>
-  #  right_join(fdp, by = "Type", multiple = "all") |>
-  #  dplyr::select(!c(Photo, Notes, layer, path)) |>
-  #  st_as_sf()
-   veg_types <- fdp
-  
+  veg_types <- look_up|>
+   right_join(fdp, by = "Type", multiple = "all") |>
+   #dplyr::select(!c(Photo, Notes, layer, path)) |>
+  st_as_sf()
+
   if (df_type=="point"){
     out_df <- file.path(out_dir, paste0(site_name, "ML_in_Point_level.rds"))
     # Let's extract the intersecting raster values for the field data.
@@ -56,7 +55,7 @@ build_ml_df <- function(cube,
              y=.xy[,2],
              Type=factor(Type, levels=unique(Type))) |>
       st_drop_geometry() |>
-      dplyr::select(!c("fid", "Date"))|>
+      #dplyr::select(!c("fid", "Date"))|>
       rename_at(vars(starts_with('mean')), ~(gsub("mean.","",.x)))
     
     attr(pnt_df, 'CRS') <- crs(cube)

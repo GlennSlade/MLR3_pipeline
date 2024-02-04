@@ -1,6 +1,6 @@
 build_task <- function(df,
                        site_name,
-                       drop_cols = c("Class")) {
+                       drop_cols = c("Description")) {
   
   
   full_df <- readRDS(df) |> 
@@ -15,6 +15,6 @@ build_task <- function(df,
     coordinate_names = c("x", "y"),
     coords_as_features = FALSE,
     crs = attributes(full_df)$CRS)
- return(task)
-   
+  return(task)
+  
 }
