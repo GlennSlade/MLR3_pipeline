@@ -8,9 +8,9 @@ library(openxlsx)
 
 site_name = "Dinaka"
 df_type = "grid"
-folds = 20
-n_evals = 50
-tune_method = "random_search" # or mbo etc
+folds = 10
+n_evals = 20
+tune_method = "mbo" # or mbo etc
 
 #============ Data Prep =====================
 
@@ -76,7 +76,7 @@ svm_tune <- tune_lrnr(
   .measure = msr("classif.acc"),
 #  sub.sample = 0.1,
   .n_evals = n_evals,
-  .tune_method = "random_search",
+  .tune_method = tune_method,
 #.tune_method = "random_search",
   .test.scale = TRUE,
 #.test.pca = TRUE
@@ -102,7 +102,7 @@ rf_tune <- tune_lrnr(
   .measure = msr("classif.acc"),
 #  sub.sample = 0.1,
   .n_evals = n_evals,
-  .tune_method = "random_search",
+  .tune_method = tune_method,
   .test.scale = TRUE,
   .test.pca = TRUE
 #.test.pca = TRUE
@@ -135,7 +135,7 @@ ens_tune <- tune_lrnr(
 #  sub.sample = 0.1,
   .n_evals = n_evals,
  # .tune_method = "random_search", 
-.tune_method = "random_search", # definitely use "mbo" for this!
+.tune_method = tune_method, # definitely use "mbo" for this!
   .test.scale = TRUE,
   .test.pca = TRUE
 )
@@ -197,8 +197,8 @@ p3
 
 tic()
 mod.pred <- predict_terra_tile(x,
-                               mod= svm_tune$tun_inst$learner,
-                               site_name="Dinaka",
+                               mod= rf_tune$tun_inst$learner,
+                               site_name= site_name,
                                .workers=1, tile=TRUE, tile_dims = 5)
 toc()
 # quick n dirt map.
@@ -222,7 +222,7 @@ writeRaster(mod.pred.fac, filename = paste0("data_out/",site_name,"/",site_name,
 ### Exporting Data ------
 # Exporting confusion matrix
 as.data.frame(res.preds)
-write.xlsx(res.preds, paste0("data_out/Confusion/res.preds_svm_",site_name,".xlsx"), rowNames=FALSE)
+write.xlsx(res.preds, paste0("data_out/",site_name,"/Confusion/res.preds_svm_",site_name,".xlsx"), rowNames=FALSE)
 
 #Exporting benchmark results
 bench <-bench.mark$aggregate(msr("classif.acc"))
@@ -231,13 +231,13 @@ s <- bench$learner_id
 b<- dplyr::bind_cols(r,s)
 names(b) <- c('classif.acc','learner')
 
-write.xlsx(b, paste0("data_out/Bench/MLR_bench_results_",site_name,".xlsx"), rowNames=FALSE)
+write.xlsx(b, paste0("data_out/",site_name,"/Bench/MLR_bench_results_",site_name,".xlsx"), rowNames=FALSE)
 
 
 #Exporting benchmark plot
 ggsave(
   p2,
-  filename = paste0("data_out/Figures/benchmark_",site_name,"_model_classif_ac.png"),
+  filename = paste0("data_out/",site_name,"/Figures/benchmark_",site_name,"_model_classif_ac.png"),
   width =16,
   height = 8,
   units = "cm"
@@ -245,42 +245,10 @@ ggsave(
 #Exporting final classification accuracy
 ggsave(
   p3,
-  filename = paste0("data_out/Figures/Final_",site_name,"_model_classif_ac.png"),
+  filename = paste0("data_out/",site_name,"/Figures/Final_",site_name,"_model_classif_ac.png"),
   width =16,
   height = 8,
   units = "cm"
 )
 
 
-### Exporting Data ------
-### Exporting Data ------
-# # Exporting confusion matrix
-# as.data.frame(res.preds)
-# write.xlsx(res.preds, paste0("data_out/Confusion/res.preds_ens_",site_name,".xlsx"), rowNames=FALSE)
-# 
-# #Exporting benchmark results
-# bench <-bench.mark$aggregate(msr("classif.acc"))
-# r <- bench$classif.acc
-# s <- bench$learner_id
-# b<- dplyr::bind_cols(r,s)
-# names(b) <- c('classif.acc','learner')
-# 
-# write.xlsx(b, paste0("data_out/Bench/MLR_bench_results_",site_name,"_ens.xlsx"), rowNames=FALSE)
-# 
-# 
-# #Exporting benchmark plot
-# ggsave(
-#   p2,
-#   filename = paste0("data_out/Figures/benchmark_",site_name,"_model_classif_ac_ens.png"),
-#   width =16,
-#   height = 8,
-#   units = "cm"
-# )
-# #Exporting final classification accuracy
-# ggsave(
-#   p3,
-#   filename = paste0("data_out/Figures/Final_",site_name,"_model_classif_ac_ens.png"),
-#   width =16,
-#   height = 8,
-#   units = "cm"
-# )
