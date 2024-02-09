@@ -29,7 +29,7 @@ build_ml_df <- function(cube,
   
   # load field survey points.
   fdp <- read_sf(file.path(base_dir, 
-                           paste0(site_name, "_train_poly3.shp")))
+                           paste0(site_name, "_train_poly.shp")))
   
   # clean up the training data get what we need.
   look_up <- read_xlsx(lookup_file, col_names=c("Type", "Description")) #|>   dplyr::select(!Description)
@@ -37,7 +37,7 @@ build_ml_df <- function(cube,
   
   veg_types <- look_up|>
    right_join(fdp, by = "Type", multiple = "all") |>
-   #dplyr::select(!c(Photo, Notes, layer, path)) |>
+   dplyr::select(!c(fid)) |>
   st_as_sf()
 
   if (df_type=="point"){
@@ -64,7 +64,7 @@ build_ml_df <- function(cube,
     
   } else if (df_type=="grid"){
     
-    out_df <- file.path(out_dir, paste0(site_name, "ML_in_grid_level.rds"))
+    out_df <- file.path(out_dir, paste0(site_name, "_ML_in_grid_level.rds"))
     # rasterize vector to same grid as cube.
     tv <- vect(veg_types) |> 
       rasterize(cube,

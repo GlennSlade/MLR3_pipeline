@@ -17,9 +17,9 @@ tune_method = "mbo" # or mbo etc
 
 x <- rast(paste0("data_in/",site_name,"/",site_name,"_stack.tif")) #import stacked image
 
-v <- build_ml_df(cube = x, site_name = site_name, df_type = df_type)
+v <- build_ml_df(cube = x, site_name = "Dinaka", df_type = "grid")
 
-v <- paste0("data_out/",site_name,"/",site_name,"ML_in_grid_level.rds")
+v <- paste0("data_out/",site_name,"/",site_name,"_ML_in_grid_level.rds")
 
 
 #================ ML pipeline ================
@@ -48,8 +48,8 @@ xgb_tune <- tune_lrnr(
   .measure = msr("classif.acc"),
   .n_evals = n_evals,
 #  sub.sample = 0.1,
-  .tune_method = tune_method,
-#.tune_method = "random_search",
+#  .tune_method = tune_method,
+.tune_method = "random_search",
   .test.scale = TRUE,
   .test.pca = TRUE,
 #.test.pca = TRUE,
