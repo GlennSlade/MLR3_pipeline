@@ -8,10 +8,22 @@ library(stringr)
 library(openxlsx)
 
 site_name = "Dinaka"
-df_type = "point"
-folds = 5
-n_evals = 10
-tune_method = "random_search" # or mbo etc
+df_type = "point" # either "point" or "grid"
+# point takes the value from the centre point of the polygon - use this if the training polygon size
+#is smaller or similar to the resolution of your image data - uses exact_extract for polygons
+# grid takes all the raster cells within the polygon and treats each grid cell as a training cell
+#use this if your polygons are larger than you raster cell size
+folds = 5 
+# if you have a small number of training points (ie running the points df_type)
+#care needs to be taken to ensure that the number of folds and n_evals doesnt exceed the number of 
+# training points to iterate over
+n_evals = 10 # number of evaluaations (iterations)
+tune_method = "random_search" # or mbo 
+tile_split =  "yes" # yes or no. Use tile if you have large raster images and 
+
+
+#improvements pending -script to check folds and n_evals against size of training classes
+
 
 #============ Data Prep =====================
 
@@ -196,12 +208,23 @@ p3
  
 # Prediction ----------------------------------
 
+# tic()
+# mod.pred <- predict_terra_tile(x,
+#                                mod= rf_tune$tun_inst$learner,
+#                                site_name= site_name,
+#                                .workers=1, tile=TRUE, tile_dims = 5)
+# toc()
+
+
 tic()
-mod.pred <- predict_terra_tile(x,
-                               mod= rf_tune$tun_inst$learner,
+mod.pred <- predict_terra(x, mod= rf_tune$tun_inst$learner,
                                site_name= site_name,
-                               .workers=1, tile=TRUE, tile_dims = 5)
+                               .workers=1)
 toc()
+
+
+
+
 # quick n dirt map.
 # par(mfrow=c(1,2))
 # plot(mod.pred, col=rev(brewer.pal(6, name="Dark2")), axes=FALSE)

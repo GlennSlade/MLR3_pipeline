@@ -11,7 +11,7 @@
 predict_terra_tile <- function(x, mod, site_name,
                           .workers=1, na.rm=TRUE,
                           out_data_dir = "data_out",
-                          tile=FALSE,
+                          tile=TRUE,
                           tile_dims=5){
   
   out_dir <- file.path(out_data_dir, site_name)

@@ -17,7 +17,7 @@ build_ml_df <- function(cube,
                         data_dir="data_in", 
                         lookup_file = file.path(data_dir, "Veg_type_lookup_list.xlsx"),
                         out_data_dir = "data_out",
-                        df_type = "point",
+                        df_type = df_type,
                         ...){
   # check the output directory and create if needed
   out_dir <- file.path(out_data_dir, site_name)
