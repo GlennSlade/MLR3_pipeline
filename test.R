@@ -6,6 +6,7 @@ fdp$Type <- as.numeric(as.character(fdp$Type))
 
 x
 fdp
+fdp
 
 veg_types <- look_up|>
   right_join(fdp, by = "Type", multiple = "all") |>
