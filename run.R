@@ -1,3 +1,4 @@
+
 # run script
 
 invisible(lapply(list.files("R", full.names = TRUE, recursive = TRUE), source))
@@ -7,25 +8,24 @@ library(stringr)
 library(openxlsx)
 
 site_name = "Dinaka"
-df_type = "grid"
-folds = 10
-n_evals = 20
-tune_method = "mbo" # or mbo etc
+df_type = "point"
+folds = 5
+n_evals = 10
+tune_method = "random_search" # or mbo etc
 
 #============ Data Prep =====================
 
 
 x <- rast(paste0("data_in/",site_name,"/",site_name,"_stack.tif")) #import stacked image
 
-v <- build_ml_df(cube = x, site_name = "Dinaka", df_type = "grid")
+v <- build_ml_df(cube = x, site_name = "Dinaka", df_type = "point")
 
-v <- paste0("data_out/",site_name,"/",site_name,"_ML_in_grid_level.rds")
-
+#v <- paste0("data_out/",site_name,"/",site_name,"_ML_in_grid_level.rds")
+v <- paste0("data_out/",site_name,"/",site_name,"_ML_in_point_level.rds")
 
 #================ ML pipeline ================
 # Auto ML ------------------
-
-task <- build_task(v, site_name)
+task <- build_task(v, "Dinaka")
 
 tune_spcv <- mlr3::rsmp("spcv_coords", folds = folds)
 
@@ -76,8 +76,8 @@ svm_tune <- tune_lrnr(
   .measure = msr("classif.acc"),
 #  sub.sample = 0.1,
   .n_evals = n_evals,
-  .tune_method = tune_method,
-#.tune_method = "random_search",
+#  .tune_method = tune_method,
+.tune_method = "random_search",
   .test.scale = TRUE,
 #.test.pca = TRUE
   .test.pca = TRUE
@@ -102,7 +102,8 @@ rf_tune <- tune_lrnr(
   .measure = msr("classif.acc"),
 #  sub.sample = 0.1,
   .n_evals = n_evals,
-  .tune_method = tune_method,
+.tune_method = "random_search",
+#  .tune_method = tune_method,
   .test.scale = TRUE,
   .test.pca = TRUE
 #.test.pca = TRUE

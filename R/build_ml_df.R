@@ -17,7 +17,7 @@ build_ml_df <- function(cube,
                         data_dir="data_in", 
                         lookup_file = file.path(data_dir, "Veg_type_lookup_list.xlsx"),
                         out_data_dir = "data_out",
-                        df_type = "grid",
+                        df_type = "point",
                         ...){
   # check the output directory and create if needed
   out_dir <- file.path(out_data_dir, site_name)
@@ -34,14 +34,15 @@ build_ml_df <- function(cube,
   # clean up the training data get what we need.
   look_up <- read_xlsx(lookup_file, col_names=c("Type", "Description")) #|>   dplyr::select(!Description)
   look_up$Type <- as.numeric(as.character(look_up$Type))
-  
-  veg_types <- look_up|>
-   right_join(fdp, by = "Type", multiple = "all") |>
-   dplyr::select(!c(fid)) |>
-  st_as_sf()
+  # 
+  # veg_types <- look_up|>
+  #  right_join(fdp, by = "Type", multiple = "all") |>
+  #  dplyr::select(!c(fid)) |>
+  # st_as_sf()
+  veg_types<- fdp|>st_as_sf()|> dplyr::select(!c(fid))
 
   if (df_type=="point"){
-    out_df <- file.path(out_dir, paste0(site_name, "ML_in_Point_level.rds"))
+    out_df <- file.path(out_dir, paste0(site_name,"_ML_in_point_level.rds"))
     # Let's extract the intersecting raster values for the field data.
     # this is one way to do it by getting average values for each measured point
     # browser()
@@ -55,7 +56,7 @@ build_ml_df <- function(cube,
              y=.xy[,2],
              Type=factor(Type, levels=unique(Type))) |>
       st_drop_geometry() |>
-      #dplyr::select(!c("fid", "Date"))|>
+      #dplyr::select(!c("Description"))|>
       rename_at(vars(starts_with('mean')), ~(gsub("mean.","",.x)))
     
     attr(pnt_df, 'CRS') <- crs(cube)
@@ -72,11 +73,11 @@ build_ml_df <- function(cube,
     
     # raster with all bands and the class key
     comb_bands <- c(tv, cube)
-    
+#    grid_df <- as.data.frame(comb_bands,na.rm=TRUE,xy=TRUE)
     grid_df <- terra_read_rows(comb_bands,
                                ...) |>
-      left_join(look_up, by = "Type") |> 
-      dplyr::arrange(Type) |> 
+      left_join(look_up, by = "Type") |>
+      dplyr::arrange(Type) |>
       mutate(Type=factor(Type, levels=unique(Type)))
     unique(grid_df$Type)
     

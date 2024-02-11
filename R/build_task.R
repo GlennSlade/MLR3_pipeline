@@ -1,10 +1,13 @@
+# build_task <- function(df,
+#                        site_name,
+#                        drop_cols = c("Description")) {
 build_task <- function(df,
-                       site_name,
-                       drop_cols = c("Description")) {
+                         site_name) {
   
+    
   
-  full_df <- readRDS(df) |> 
-    dplyr::select(!all_of(drop_cols)) 
+  full_df <- readRDS(df) #|> 
+  #  dplyr::select(!all_of(drop_cols)) 
   
   
   # define the mlr3 task
