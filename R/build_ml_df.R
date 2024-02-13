@@ -29,7 +29,7 @@ build_ml_df <- function(cube,
   
   # load field survey points.
   fdp <- read_sf(file.path(base_dir, 
-                           paste0(site_name, "_train_poly.shp")))
+                           paste0(site_name, "_",train_name,".shp")))
   
   # clean up the training data get what we need.
   look_up <- read_xlsx(lookup_file, col_names=c("Type", "Description")) #|>   dplyr::select(!Description)

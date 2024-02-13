@@ -20,12 +20,12 @@ folds = 5 # number of different Spatial cross validation folds SPCV
 # if you have a small number of training points (ie running the points df_type)
 #care needs to be taken to ensure that the number of folds and n_evals doesnt exceed the number of 
 # training points to iterate over
-n_evals = 5 # number of evaluations (iterations)
+n_evals = 20 # number of evaluations (iterations)
 tune_method = "random_search" #  mbo or random_search
 tile_split =  "NO" # YES or NO. Use tile if you have large raster images and you are
 # working on smaller memory PCs or laptops
-test_scale = "FALSE" # TRUE or FALSE test scaling of training data
-test_pca = "FALSE" # TRUE or FALSE test Priciple component analysis of training data
+test_scale = "TRUE" # TRUE or FALSE test scaling of training data
+test_pca = "TRUE" # TRUE or FALSE test Priciple component analysis of training data
 #improvements pending -script to check folds and n_evals against size of training classes
 learner_ML = "ens" # Select ml learner algorithm to use for the final production of classified image 
 # choices are: "svm", "rf" , "ens", "xgb"
@@ -40,8 +40,6 @@ v <- build_ml_df(cube = x, site_name = site_name, df_type = df_type)
 
 #v <- paste0("data_out/",site_name,"/",site_name,"_ML_in_grid_level.rds")
 #v <- paste0("data_out/",site_name,"/",site_name,"_ML_in_point_level.rds")
-
-
 
 #================ ML pipeline ================
 # Auto ML ------------------
@@ -101,10 +99,9 @@ autoplot(tune_spcv, task=task, 1:3)
    .n_evals = n_evals,
    #  .tune_method = tune_method,
    .tune_method = "random_search",
-   .test.scale = test_scale,
-   #.test.scale = TRUE,
-      #.test.pca = TRUE
-   .test.pca = test_pca
+   .test.scale = TRUE,
+   #.test.pca = TRUE
+   .test.pca = TRUE
  )
  plot(svm_tune$graph)
  svm_tune$tun_inst$tuning_result

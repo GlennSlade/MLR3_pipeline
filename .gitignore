@@ -4,7 +4,7 @@
 .httr-oauth
 .DS_Store
 
-/data
+/data_out
 /data*
 /SS
 /reprex
