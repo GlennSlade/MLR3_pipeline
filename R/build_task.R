@@ -8,7 +8,7 @@ build_task <- function(df,
   
   full_df <- readRDS(df) #|> 
   #  dplyr::select(!all_of(drop_cols)) 
-  full_df <- as.data.frame(full_df)
+#  full_df <- as.data.frame(full_df)
   
   # define the mlr3 task
   task <- mlr3spatiotempcv::TaskClassifST$new(

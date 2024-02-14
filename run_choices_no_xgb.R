@@ -16,11 +16,11 @@ df_type = "point" # either "point" or "grid"
 # grid takes all the raster cells within the polygon and treats each grid cell as a training cell
 #use this if your polygons are larger than you raster cell size - NB this method only processes
 #raster cells that are entirely within a polygon
-folds = 5# number of different Spatial cross validation folds SPCV
+folds = 10# number of different Spatial cross validation folds SPCV
 # if you have a small number of training points (ie running the points df_type)
 #care needs to be taken to ensure that the number of folds and n_evals doesnt exceed the number of 
 # training points to iterate over
-n_evals = 5 # number of evaluations (iterations)
+n_evals = 15 # number of evaluations (iterations)
 tune_method = "random_search" #  mbo or random_search
 tile_split =  "NO" # YES or NO. Use tile if you have large raster images and you are
 # working on smaller memory PCs or laptops
@@ -34,7 +34,7 @@ learner_ML = "ens" # Select ml learner algorithm to use for the final production
 #============ Data Prep =====================
 
 
-x <- rast(paste0("data_in/",site_name,"/",site_name,"_stack_clip.tif")) #import stacked image
+x <- rast(paste0("data_in/",site_name,"/",site_name,"_stack.tif")) #import stacked image
 
 v <- build_ml_df(cube = x, site_name = site_name, df_type = df_type)
 
