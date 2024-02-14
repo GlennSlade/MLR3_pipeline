@@ -16,11 +16,11 @@ df_type = "point" # either "point" or "grid"
 # grid takes all the raster cells within the polygon and treats each grid cell as a training cell
 #use this if your polygons are larger than you raster cell size - NB this method only processes
 #raster cells that are entirely within a polygon
-folds = 10 # number of different Spatial cross validation folds SPCV
+folds = 5# number of different Spatial cross validation folds SPCV
 # if you have a small number of training points (ie running the points df_type)
 #care needs to be taken to ensure that the number of folds and n_evals doesnt exceed the number of 
 # training points to iterate over
-n_evals = 20 # number of evaluations (iterations)
+n_evals = 5 # number of evaluations (iterations)
 tune_method = "random_search" #  mbo or random_search
 tile_split =  "NO" # YES or NO. Use tile if you have large raster images and you are
 # working on smaller memory PCs or laptops
@@ -54,39 +54,39 @@ tune_spcv <- mlr3::rsmp("cv", folds = folds)
 autoplot(tune_spcv, task=task, 1:3)
 
 # ================ model tuning. =================
-# xgboost first.
- tic()
- xgb.lrn <- lts('classif.xgboost.rbv2')$get_learner()
-
-# here we can add the option for filtering based on importance as a hyper parameter.
- xgb.lrn.filt <- po("filter", filter=flt("importance"), filter.frac=to_tune(0.1, 1))%>>%
-   xgb.lrn
-
- xgb_tune <- tune_lrnr(
-  .task = task,
-   .lrnr = xgb.lrn.filt,
-  .resamp = tune_spcv,
-   .measure = msr("classif.acc"),
-   .n_evals = n_evals,
- #  sub.sample = 0.1,
-   .tune_method = tune_method,
- #  .tune_method = "mbo",
-   .test.scale = test_scale,
- #  .test.scale = TRUE,
-   .test.pca = test_pca,
- #  .test.pca = TRUE,
- #.test.pca = TRUE,
-   .workers = future::availableCores() - 2,
-   .verbose = FALSE,
-  .seed = 5446
- )
-
- plot(xgb_tune$graph)
- xgb_tune$tun_inst$tuning_result
- xgb_tune$tun_inst$learner$model$importance$features # view selected features if filter is used.
- xgb_tune$tun_inst$learner$model$importance$scores
-
- toc()
+# # xgboost first.
+#  tic()
+#  xgb.lrn <- lts('classif.xgboost.rbv2')$get_learner()
+# 
+# # here we can add the option for filtering based on importance as a hyper parameter.
+#  xgb.lrn.filt <- po("filter", filter=flt("importance"), filter.frac=to_tune(0.1, 1))%>>%
+#    xgb.lrn
+# 
+#  xgb_tune <- tune_lrnr(
+#   .task = task,
+#    .lrnr = xgb.lrn.filt,
+#   .resamp = tune_spcv,
+#    .measure = msr("classif.acc"),
+#    .n_evals = n_evals,
+#  #  sub.sample = 0.1,
+#    .tune_method = tune_method,
+#  #  .tune_method = "mbo",
+#    .test.scale = test_scale,
+#  #  .test.scale = TRUE,
+#    .test.pca = test_pca,
+#  #  .test.pca = TRUE,
+#  #.test.pca = TRUE,
+#    .workers = future::availableCores() - 2,
+#    .verbose = FALSE,
+#   .seed = 5446
+#  )
+# 
+#  plot(xgb_tune$graph)
+#  xgb_tune$tun_inst$tuning_result
+#  xgb_tune$tun_inst$learner$model$importance$features # view selected features if filter is used.
+#  xgb_tune$tun_inst$learner$model$importance$scores
+# 
+#  toc()
  # now for svm
  
  tic()
@@ -144,7 +144,6 @@ rf_tune$tun_inst$learner$model$importance$scores
 tic()
 
 ens.lrn.tune <- gunion(list(
-   po("learner_cv", xgb.lrn, id = "ens_xgb"),
   po("learner_cv", svm.lrn, id = "ens_rf"),
   po("learner_cv", rf.lrn, id = "ens_svm"),
   po("nop", "ens_nop")
@@ -178,8 +177,7 @@ toc()
 
 # =================== benchmarking =================================
 tic()
-bench.mark <- benchmark_lrnrs(xgb_tune$tun_inst$learner, 
-                              svm_tune$tun_inst$learner, 
+bench.mark <- benchmark_lrnrs(svm_tune$tun_inst$learner, 
                               rf_tune$tun_inst$learner, 
                               ens_tune$tun_inst$learner, 
                              lrn("classif.ranger", id="ranger.untuned"), #untuned random forest
