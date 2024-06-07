@@ -8,7 +8,7 @@ library(openxlsx)
 ## Parameter choices
 
 site_name = "S2" # Site name - the image data should be named Site_name_stack.tif the training data 
-train_name = "train_poly" # training data should be "site_name"_"train_name".shp
+train_name = "train_poly_full" # training data should be "site_name"_"train_name".shp
 df_type = "point" # either "point" or "grid"
 # "point" uses exact_extract taking the mean value for the polygons and allocates the value to
 #the centre point of the polygon - use this if the training polygon size

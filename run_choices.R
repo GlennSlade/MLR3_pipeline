@@ -7,8 +7,8 @@ library(openxlsx)
 
 ## Parameter choices
 
-site_name = "S2" # Site name - the image data should be named Site_name_stack.tif the training data 
-train_name = "65_100" # training data should be "site_name"_"train_name".shp
+site_name = "Planet" # Site name - the image data should be named Site_name_stack.tif the training data 
+train_name = "equal_class_size_30_train_90_clean" # training data should be "site_name"_"train_name".shp
 df_type = "point" # either "point" or "grid"
 # "point" uses exact_extract taking the mean value for the polygons and allocates the value to
 #the centre point of the polygon - use this if the training polygon size
@@ -20,15 +20,16 @@ folds = 10 # number of different Spatial cross validation folds SPCV
 # if you have a small number of training points (ie running the points df_type)
 #care needs to be taken to ensure that the number of folds and n_evals doesnt exceed the number of 
 # training points to iterate over
-n_evals = 50 # number of evaluations (iterations)
+n_evals = 40 # number of evaluations (iterations)
 tune_method = "random_search" #  mbo or random_search
 tile_split =  "NO" # YES or NO. Use tile if you have large raster images and you are
 # working on smaller memory PCs or laptops
-test_scale = "FALSE" # TRUE or FALSE test scaling of training data
-test_pca = "FALSE" # TRUE or FALSE test Priciple component analysis of training data
+test_scale = "TRUE" # TRUE or FALSE test scaling of training data
+test_pca = "TRUE" # TRUE or FALSE test Principle component analysis of training data
 #improvements pending -script to check folds and n_evals against size of training classes
-learner_ML = "ens" # Select ml learner algorithm to use for the final production of classified image 
-# choices are: "svm", "rf" , "ens", "xgb"
+learner_ML = "svm" # Select ml learner algorithm to use for the final production of classified image 
+# choices coded at the moment are: "svm", "rf" , "ens", "xgb"
+#"ens" is an ensemble method of the results of all the learner then put through a final rf step.
 
 
 #============ Data Prep =====================
@@ -47,8 +48,8 @@ v <- build_ml_df(cube = x, site_name = site_name, df_type = df_type)
 # Auto ML ------------------
 task <- build_task(v, site_name)
 
-#tune_spcv <- mlr3::rsmp("spcv_coords", folds = folds)
-tune_spcv <- mlr3::rsmp("cv", folds = folds)
+tune_spcv <- mlr3::rsmp("spcv_coords", folds = folds)
+#tune_spcv <- mlr3::rsmp("cv", folds = folds)
 
 # #inspect the spatial cv
 autoplot(tune_spcv, task=task, 1:3)

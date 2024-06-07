@@ -39,7 +39,7 @@ build_ml_df <- function(cube,
   #  right_join(fdp, by = "Type", multiple = "all") |>
   #  dplyr::select(!c(fid)) |>
   # st_as_sf()
-  veg_types<- fdp|>st_as_sf()|> dplyr::select(!c(fid))
+  veg_types<- fdp|>st_as_sf()#|> dplyr::select(!c(fid))
 
   if (df_type=="point"){
     out_df <- file.path(out_dir, paste0(site_name,"_ML_in_point_level.rds"))
